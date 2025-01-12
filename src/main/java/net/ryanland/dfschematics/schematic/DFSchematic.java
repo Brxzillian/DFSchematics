@@ -77,10 +77,10 @@ public class DFSchematic {
     }
 
     private static final Map<String, String> DEFAULT_BLOCK_STATES = Map.of(
-        "snowy", "false",
-        "axis", "y",
-        "powered", "false",
-        "open", "false"
+            "snowy", "false",
+            "axis", "y",
+            "powered", "false",
+            "open", "false"
     );
 
     public void read() {
@@ -105,7 +105,7 @@ public class DFSchematic {
                     // Tracked Blocks
                     boolean remove = false;
                     for (TrackedBlock trackedBlock : trackedBlocks.getBlocks()) {
-                        if (material.equals("minecraft:"+trackedBlock.getMaterial())) {
+                        if (material.equals("minecraft:" + trackedBlock.getMaterial())) {
                             trackedBlock.addLocation(new Location(x, y, z));
                             remove = trackedBlock.isRemoved();
                             break;
@@ -119,7 +119,7 @@ public class DFSchematic {
                     Map<String, String> states = new HashMap<>(block.states);
                     DEFAULT_BLOCK_STATES.forEach(states::remove);
                     String result = material + (states.isEmpty() ? "" : "[" + String.join(",",
-                        states.entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue()).toList()) + "]");
+                            states.entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue()).toList()) + "]");
 
                     structure.addToPalette(result); // includes block states such as facing=up
                     structure.addBlock(result);
@@ -130,36 +130,45 @@ public class DFSchematic {
 
         for (SchematicBlockEntity block : schematic.blockEntities().toList()) {
             if (block.data.containsKey("front_text")) {
-                // Signs after MC 1.20 ----------
+                // Signs after MC 1.20.5 ----------
                 Map<String, Object> frontCompound = ((Map<String, Object>) block.data.get("front_text"));
                 Map<String, Object> backCompound = ((Map<String, Object>) block.data.get("back_text"));
 
                 Sign.Side front = new Sign.Side(
-                    ((List<String>) frontCompound.get("messages")),
-                    ((byte) frontCompound.get("has_glowing_text")) == 1,
-                    (String) frontCompound.get("color")
+                        ((List<String>) frontCompound.get("messages")),
+                        ((byte) frontCompound.get("has_glowing_text")) == 1,
+                        (String) frontCompound.get("color")
                 );
 
                 Sign.Side back = new Sign.Side(
-                    ((List<String>) backCompound.get("messages")),
-                    ((byte) backCompound.get("has_glowing_text")) == 1,
-                    (String) backCompound.get("color")
+                        ((List<String>) backCompound.get("messages")),
+                        ((byte) backCompound.get("has_glowing_text")) == 1,
+                        (String) backCompound.get("color")
                 );
 
                 Sign sign = new Sign(block.pos, front, back);
                 if (!sign.isEmpty()) signs.add(sign);
 
             } else if (block.data.containsKey("Text1")) {
-                // Signs before MC 1.20 ---------
+                // Signs before MC 1.20.5 ---------
                 Sign sign = new Sign(block.pos, new Sign.Side(List.of(
-                    ((String) block.data.get("Text1")),
-                    ((String) block.data.get("Text2")),
-                    ((String) block.data.get("Text3")),
-                    ((String) block.data.get("Text4"))), false, "black"),
-                    new Sign.Side(List.of("", "", "", ""), false, "black"));
+                        ((String) block.data.get("Text1")),
+                        ((String) block.data.get("Text2")),
+                        ((String) block.data.get("Text3")),
+                        ((String) block.data.get("Text4"))), false, "black"),
+                        new Sign.Side(List.of("", "", "", ""), false, "black"));
                 if (!sign.isEmpty()) signs.add(sign);
+            } else if (block.data.containsKey("profile")) {
+                // Heads after MC 1.20.5 -------
+                Map<String, Object> data = (TreeMap<String, Object>) block.data.get("profile");
+                if (data.containsKey("properties")) {
+                    String owner = (String) data.get("name");
+                    String value = (String) ((Map<String, Object>) ((List<Object>) data.get("properties")).get(0)).get("value");
+                    String texture = (owner == null || owner.equals("DF-HEAD") ? value.substring(88) : owner);//substring removes unnecessary eyJ0ZX....
+                    heads.add(new Head(block.pos(), texture));
+                }
             } else if (block.data.containsKey("SkullOwner")) {
-                // Heads -------
+                // Heads before MC 1.20.5 -------
                 Map<String, Object> data = (TreeMap<String, Object>) block.data.get("SkullOwner");
                 if (data.containsKey("Properties")) {
                     String owner = (String) data.get("Name");
